@@ -73,11 +73,17 @@ export const CustomerList = () => {
 
         if (profileDeleteError) throw profileDeleteError;
 
-        // Sign out all sessions for this user
+        // Check if this is the current user
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user?.id === profileData.id) {
-          await supabase.auth.signOut();
-          navigate('/restaurant');
+          try {
+            await supabase.auth.signOut({ scope: 'local' });
+          } catch (signOutError) {
+            console.warn('Sign out error:', signOutError);
+            // Even if sign out fails, we'll still redirect
+          } finally {
+            navigate('/restaurant');
+          }
         }
 
         try {
