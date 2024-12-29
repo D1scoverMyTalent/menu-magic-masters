@@ -40,7 +40,7 @@ export const ChefMenuItems = ({ items, onRefetch }: ChefMenuItemsProps) => {
   if (items.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-muted-foreground">No menu items added yet.</p>
+        <p className="text-[#600000]">No menu items added yet.</p>
       </div>
     );
   }
@@ -57,27 +57,27 @@ export const ChefMenuItems = ({ items, onRefetch }: ChefMenuItemsProps) => {
             />
           </AspectRatio>
           <div className="p-4">
-            <h3 className="text-lg font-semibold mb-2">{item.food_items.name}</h3>
+            <h3 className="text-lg font-semibold mb-2 text-[#600000]">{item.food_items.name}</h3>
             {item.custom_ingredients && (
-              <p className="text-sm text-muted-foreground mb-2">
+              <p className="text-sm text-[#600000] mb-2">
                 Custom Ingredients: {item.custom_ingredients}
               </p>
             )}
             {item.recipe_notes && (
-              <p className="text-sm text-muted-foreground mb-4">
+              <p className="text-sm text-[#600000] mb-4">
                 Recipe Notes: {item.recipe_notes}
               </p>
             )}
             <div className="flex justify-end space-x-2">
               <Button variant="ghost" size="icon">
-                <Edit className="h-4 w-4" />
+                <Edit className="h-4 w-4 text-[#600000]" />
               </Button>
               <Button 
                 variant="ghost" 
                 size="icon"
                 onClick={() => handleDelete(item.id)}
               >
-                <Trash className="h-4 w-4" />
+                <Trash className="h-4 w-4 text-[#600000]" />
               </Button>
             </div>
           </div>

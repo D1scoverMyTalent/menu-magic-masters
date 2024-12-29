@@ -20,13 +20,13 @@ export const ChefDashboard = () => {
           <TabsList className="w-full justify-start border-b border-[#600000]/20">
             <TabsTrigger 
               value="quotes" 
-              className="text-[#600000] data-[state=active]:border-[#600000]"
+              className="text-white data-[state=active]:text-[#600000] data-[state=active]:border-[#600000]"
             >
               Quotes
             </TabsTrigger>
             <TabsTrigger 
               value="menu" 
-              className="text-[#600000] data-[state=active]:border-[#600000]"
+              className="text-white data-[state=active]:text-[#600000] data-[state=active]:border-[#600000]"
             >
               My Menu
             </TabsTrigger>
