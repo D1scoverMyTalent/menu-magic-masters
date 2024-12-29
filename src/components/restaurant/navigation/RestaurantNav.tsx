@@ -8,7 +8,7 @@ import { SignUpForm } from "../SignUpForm";
 import { QuoteList } from "../QuoteList";
 import { QuoteForm } from "../QuoteForm";
 import { supabase } from "@/integrations/supabase/client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface RestaurantNavProps {
   user: any;
@@ -38,6 +38,36 @@ export const RestaurantNav = ({
   handleAuthSuccess
 }: RestaurantNavProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session);
+    };
+
+    checkSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      setIsAuthenticated(false);
+      setQuoteItems([]);
+      setShowQuoteForm(false);
+      setIsQuoteOpen(false);
+    } catch (error) {
+      console.error('Sign out error:', error);
+    }
+  };
 
   return (
     <nav className="bg-primary/95 backdrop-blur-sm sticky top-0 z-50 border-b border-primary/20">
@@ -66,7 +96,7 @@ export const RestaurantNav = ({
                   <span>Quote ({quoteItems.reduce((acc, item) => acc + item.quantity, 0)})</span>
                 </Button>
                 
-                {!user ? (
+                {!isAuthenticated ? (
                   <Button 
                     variant="ghost" 
                     className="text-primary w-full justify-start gap-2"
@@ -82,7 +112,7 @@ export const RestaurantNav = ({
                   <Button 
                     variant="ghost" 
                     className="text-primary w-full justify-start"
-                    onClick={() => supabase.auth.signOut()}
+                    onClick={handleSignOut}
                   >
                     Sign Out
                   </Button>
@@ -123,7 +153,7 @@ export const RestaurantNav = ({
             </SheetContent>
           </Sheet>
 
-          {!user ? (
+          {!isAuthenticated ? (
             <Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
               <DialogTrigger asChild>
                 <Button variant="ghost" className="text-secondary gap-2">
@@ -153,7 +183,7 @@ export const RestaurantNav = ({
             <Button 
               variant="ghost" 
               className="text-secondary"
-              onClick={() => supabase.auth.signOut()}
+              onClick={handleSignOut}
             >
               Sign Out
             </Button>

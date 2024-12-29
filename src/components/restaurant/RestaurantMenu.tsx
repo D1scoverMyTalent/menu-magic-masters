@@ -22,17 +22,53 @@ export const RestaurantMenu = () => {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         if (sessionError) throw sessionError;
         
-        setUser(session?.user ?? null);
+        // Check if the user still exists in the profiles table
+        if (session?.user) {
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+
+          if (profileError || !profile) {
+            // If the profile doesn't exist, sign out the user
+            await supabase.auth.signOut();
+            setUser(null);
+          } else {
+            setUser(session.user);
+          }
+        } else {
+          setUser(null);
+        }
+        
         setIsInitialized(true);
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-          if (event === 'SIGNED_IN') {
-            setUser(session?.user ?? null);
-            setShowAuthDialog(false);
-            toast({
-              title: "Welcome back!",
-              description: "You have successfully signed in.",
-            });
+          if (event === 'SIGNED_IN' && session?.user) {
+            // Verify the user exists in profiles when signing in
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single();
+
+            if (profile) {
+              setUser(session.user);
+              setShowAuthDialog(false);
+              toast({
+                title: "Welcome back!",
+                description: "You have successfully signed in.",
+              });
+            } else {
+              // If no profile exists, sign out
+              await supabase.auth.signOut();
+              setUser(null);
+              toast({
+                variant: "destructive",
+                title: "Error",
+                description: "User profile not found.",
+              });
+            }
           } else if (event === 'SIGNED_OUT') {
             setUser(null);
             setQuoteItems([]);
@@ -116,7 +152,7 @@ export const RestaurantMenu = () => {
     });
   };
 
-  if (!isInitialized || isLoading) return <div className="text-center p-8">Loading...</div>;
+  if (!isInitialized) return <div className="text-center p-8">Loading...</div>;
 
   return (
     <div className="min-h-screen bg-background">
