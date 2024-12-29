@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Card } from '@/components/ui/card';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, User, Edit, Trash } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { CustomerForm } from './CustomerForm';
+import { CustomerCard } from './CustomerCard';
 import { useNavigate } from 'react-router-dom';
 
 export const CustomerList = () => {
@@ -73,15 +73,14 @@ export const CustomerList = () => {
 
         if (profileDeleteError) throw profileDeleteError;
 
-        // Sign out the user if they're currently logged in
+        // Sign out all sessions for this user
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user?.id === profileData.id) {
-          await supabase.auth.signOut({ scope: 'local' });
+          await supabase.auth.signOut();
           navigate('/restaurant');
         }
 
         try {
-          // Try to delete the auth user, but don't throw if it fails
           await supabase.auth.admin.deleteUser(profileData.id);
         } catch (authError) {
           console.warn('Auth user might have already been deleted:', authError);
@@ -113,6 +112,8 @@ export const CustomerList = () => {
     fetchCustomers();
   };
 
+  if (loading) return <div>Loading...</div>;
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center mb-6">
@@ -123,53 +124,22 @@ export const CustomerList = () => {
         </Button>
       </div>
 
-      {loading ? (
-        <div>Loading...</div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {customers.map((customer) => (
-            <Card key={customer.id} className="p-6">
-              <div className="flex items-center space-x-4">
-                <div className="p-2 bg-primary/10 rounded-full">
-                  <User className="h-6 w-6 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-[#800000]">{customer.name}</h3>
-                  <p className="text-sm text-[#800000]">{customer.email}</p>
-                  {customer.phone && (
-                    <p className="text-sm text-[#800000]">{customer.phone}</p>
-                  )}
-                  {customer.address && (
-                    <p className="text-sm text-[#800000]">{customer.address}</p>
-                  )}
-                </div>
-                <div className="flex space-x-2">
-                  <Button 
-                    variant="ghost" 
-                    size="icon"
-                    onClick={() => {
-                      setSelectedCustomer(customer);
-                      setIsFormOpen(true);
-                    }}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="icon"
-                    onClick={() => {
-                      setSelectedCustomer(customer);
-                      setIsDeleteDialogOpen(true);
-                    }}
-                  >
-                    <Trash className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
-      )}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {customers.map((customer) => (
+          <CustomerCard
+            key={customer.id}
+            customer={customer}
+            onEdit={() => {
+              setSelectedCustomer(customer);
+              setIsFormOpen(true);
+            }}
+            onDelete={() => {
+              setSelectedCustomer(customer);
+              setIsDeleteDialogOpen(true);
+            }}
+          />
+        ))}
+      </div>
 
       {/* Create/Edit Dialog */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
