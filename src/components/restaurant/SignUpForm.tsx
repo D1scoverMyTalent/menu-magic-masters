@@ -33,6 +33,7 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
         options: {
           data: {
             full_name: data.fullName,
+            phone: data.phone
           },
         },
       });
