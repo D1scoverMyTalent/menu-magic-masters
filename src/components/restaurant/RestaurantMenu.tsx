@@ -19,23 +19,35 @@ export const RestaurantMenu = () => {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        if (sessionError) throw sessionError;
+        const { data: { session } } = await supabase.auth.getSession();
         
         // If there's a session, verify the profile exists
         if (session?.user) {
-          const { data: profile, error: profileError } = await supabase
+          const { data: profile } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
             .maybeSingle();
 
-          if (profileError || !profile) {
-            console.log('Profile not found or error:', profileError);
-            // Clear local state
+          if (!profile) {
+            console.log('Profile not found');
+            // Clear local state first
             setUser(null);
-            // Sign out the user since their profile doesn't exist
-            await supabase.auth.signOut({ scope: 'local' });
+            setQuoteItems([]);
+            setShowQuoteForm(false);
+            setIsQuoteOpen(false);
+            
+            try {
+              // Attempt to sign out, but don't wait for it
+              supabase.auth.signOut({ scope: 'local' }).catch(() => {
+                // Ignore sign out errors since we've already cleared local state
+                console.log('Sign out failed, but local state is cleared');
+              });
+            } catch (error) {
+              // Ignore sign out errors
+              console.log('Sign out error caught:', error);
+            }
+
             toast({
               variant: "destructive",
               title: "Session Error",
@@ -52,8 +64,7 @@ export const RestaurantMenu = () => {
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
           if (event === 'SIGNED_IN' && session?.user) {
-            // Verify the profile exists when signing in
-            const { data: profile, error: profileError } = await supabase
+            const { data: profile } = await supabase
               .from('profiles')
               .select('*')
               .eq('id', session.user.id)
@@ -67,10 +78,24 @@ export const RestaurantMenu = () => {
                 description: "You have successfully signed in.",
               });
             } else {
-              // If no profile exists, sign out
               console.log('No profile found for user:', session.user.id);
-              await supabase.auth.signOut({ scope: 'local' });
+              // Clear local state first
               setUser(null);
+              setQuoteItems([]);
+              setShowQuoteForm(false);
+              setIsQuoteOpen(false);
+              
+              try {
+                // Attempt to sign out, but don't wait for it
+                supabase.auth.signOut({ scope: 'local' }).catch(() => {
+                  // Ignore sign out errors since we've already cleared local state
+                  console.log('Sign out failed, but local state is cleared');
+                });
+              } catch (error) {
+                // Ignore sign out errors
+                console.log('Sign out error caught:', error);
+              }
+
               toast({
                 variant: "destructive",
                 title: "Error",
@@ -90,9 +115,23 @@ export const RestaurantMenu = () => {
         };
       } catch (error: any) {
         console.error('Auth initialization error:', error);
-        // Ensure user is signed out on error
-        await supabase.auth.signOut({ scope: 'local' });
+        // Clear local state first
         setUser(null);
+        setQuoteItems([]);
+        setShowQuoteForm(false);
+        setIsQuoteOpen(false);
+        
+        try {
+          // Attempt to sign out, but don't wait for it
+          supabase.auth.signOut({ scope: 'local' }).catch(() => {
+            // Ignore sign out errors since we've already cleared local state
+            console.log('Sign out failed, but local state is cleared');
+          });
+        } catch (error) {
+          // Ignore sign out errors
+          console.log('Sign out error caught:', error);
+        }
+
         toast({
           variant: "destructive",
           title: "Authentication Error",
