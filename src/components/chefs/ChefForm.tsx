@@ -69,13 +69,13 @@ export const ChefForm = ({ initialData, onSuccess, onCancel }: ChefFormProps) =>
           throw new Error("A chef with this email already exists");
         }
 
-        // Create new chef with auth account and correct role
+        // Create new chef with auth account and explicitly set role as 'chef'
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email: formData.email.trim().toLowerCase(),
           password: formData.password,
           options: {
             data: {
-              role: 'chef',
+              role: 'chef',  // Explicitly set role as chef
               full_name: formData.name
             }
           }
