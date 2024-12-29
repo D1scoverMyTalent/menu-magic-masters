@@ -22,18 +22,25 @@ export const RestaurantMenu = () => {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         if (sessionError) throw sessionError;
         
-        // Check if the user still exists in the profiles table
+        // If there's a session, verify the profile exists
         if (session?.user) {
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
-            .single();
+            .maybeSingle();
 
           if (profileError || !profile) {
-            // If the profile doesn't exist, sign out the user
-            await supabase.auth.signOut();
+            console.log('Profile not found or error:', profileError);
+            // Clear local state
             setUser(null);
+            // Sign out the user since their profile doesn't exist
+            await supabase.auth.signOut({ scope: 'local' });
+            toast({
+              variant: "destructive",
+              title: "Session Error",
+              description: "Your session has expired. Please sign in again.",
+            });
           } else {
             setUser(session.user);
           }
@@ -45,12 +52,12 @@ export const RestaurantMenu = () => {
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
           if (event === 'SIGNED_IN' && session?.user) {
-            // Verify the user exists in profiles when signing in
-            const { data: profile } = await supabase
+            // Verify the profile exists when signing in
+            const { data: profile, error: profileError } = await supabase
               .from('profiles')
               .select('*')
               .eq('id', session.user.id)
-              .single();
+              .maybeSingle();
 
             if (profile) {
               setUser(session.user);
@@ -61,12 +68,13 @@ export const RestaurantMenu = () => {
               });
             } else {
               // If no profile exists, sign out
-              await supabase.auth.signOut();
+              console.log('No profile found for user:', session.user.id);
+              await supabase.auth.signOut({ scope: 'local' });
               setUser(null);
               toast({
                 variant: "destructive",
                 title: "Error",
-                description: "User profile not found.",
+                description: "User profile not found. Please contact support.",
               });
             }
           } else if (event === 'SIGNED_OUT') {
@@ -82,6 +90,9 @@ export const RestaurantMenu = () => {
         };
       } catch (error: any) {
         console.error('Auth initialization error:', error);
+        // Ensure user is signed out on error
+        await supabase.auth.signOut({ scope: 'local' });
+        setUser(null);
         toast({
           variant: "destructive",
           title: "Authentication Error",
