@@ -64,6 +64,31 @@ export const CustomerForm = ({ initialData, onSuccess, onCancel }: CustomerFormP
 
         if (authError) throw authError;
 
+        // Then create customer record
+        const { error: customerError } = await supabase
+          .from('customers')
+          .insert([{
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone,
+            address: formData.address
+          }]);
+
+        if (customerError) throw customerError;
+
+        // Create profile record
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([{
+            id: authData?.user?.id,
+            email: formData.email,
+            full_name: formData.name,
+            phone: formData.phone,
+            role: 'customer'
+          }]);
+
+        if (profileError) throw profileError;
+
         toast({
           title: "Success",
           description: "Customer created successfully",
