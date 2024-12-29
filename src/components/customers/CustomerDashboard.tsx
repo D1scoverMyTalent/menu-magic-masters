@@ -77,8 +77,16 @@ export const CustomerDashboard = () => {
   });
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    navigate('/restaurant');
+    try {
+      await supabase.auth.signOut();
+    } catch (error: any) {
+      console.warn('Error during sign out:', error);
+      // Even if server-side logout fails, clear local session
+      await supabase.auth.clearSession();
+    } finally {
+      // Always navigate away, regardless of logout success
+      navigate('/restaurant');
+    }
   };
 
   if (isLoading) return <div className="flex items-center justify-center p-8">Loading...</div>;
