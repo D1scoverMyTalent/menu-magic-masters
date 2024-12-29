@@ -1,9 +1,23 @@
-import { useState } from 'react';
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { ChefFormFields } from './ChefFormFields';
-import { validateEmail, validatePassword } from './utils/formValidation';
+
+const chefFormSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  speciality: z.string().optional(),
+  experience_years: z.string().transform(Number).optional(),
+  phone: z.string().optional(),
+});
+
+type ChefFormData = z.infer<typeof chefFormSchema>;
 
 interface ChefFormProps {
   initialData?: any;
@@ -12,59 +26,48 @@ interface ChefFormProps {
 }
 
 export const ChefForm = ({ initialData, onSuccess, onCancel }: ChefFormProps) => {
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    name: initialData?.name || '',
-    email: initialData?.email || '',
-    speciality: initialData?.speciality || '',
-    experience_years: initialData?.experience_years || '',
-    phone: initialData?.phone || '',
-    password: '',
-  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  const handleFormDataChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
+  const form = useForm<ChefFormData>({
+    resolver: zodResolver(chefFormSchema),
+    defaultValues: {
+      name: initialData?.name || "",
+      email: initialData?.email || "",
+      password: "",
+      speciality: initialData?.speciality || "",
+      experience_years: initialData?.experience_years?.toString() || "",
+      phone: initialData?.phone || "",
+    },
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
+  const handleSubmit = async (formData: ChefFormData) => {
     try {
-      if (!validateEmail(formData.email)) {
-        throw new Error("Please enter a valid email address");
-      }
-
-      const submissionData = {
-        name: formData.name,
-        email: formData.email,
-        speciality: formData.speciality,
-        experience_years: formData.experience_years ? parseInt(formData.experience_years) : null,
-        phone: formData.phone,
-      };
+      setIsSubmitting(true);
 
       if (initialData) {
-        const { error } = await supabase
-          .from('chefs')
-          .update(submissionData)
-          .eq('id', initialData.id);
+        // Update existing chef
+        const { error: updateError } = await supabase
+          .from("chefs")
+          .update({
+            name: formData.name,
+            email: formData.email,
+            speciality: formData.speciality || null,
+            experience_years: formData.experience_years || null,
+            phone: formData.phone || null,
+          })
+          .eq("id", initialData.id);
 
-        if (error) throw error;
-        toast({
-          title: "Success",
-          description: "Chef updated successfully",
-        });
+        if (updateError) throw updateError;
       } else {
-        validatePassword(formData.password);
-
-        // Check if email already exists
-        const { data: existingChef } = await supabase
-          .from('chefs')
-          .select('*')
-          .eq('email', formData.email.trim().toLowerCase())
+        // Check if chef with email already exists
+        const { data: existingChef, error: checkError } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("email", formData.email.trim().toLowerCase())
           .maybeSingle();
 
+        if (checkError) throw checkError;
         if (existingChef) {
           throw new Error("A chef with this email already exists");
         }
@@ -81,52 +84,137 @@ export const ChefForm = ({ initialData, onSuccess, onCancel }: ChefFormProps) =>
           }
         });
 
-        if (authError) {
-          if (authError.message.includes("User already registered")) {
-            throw new Error("This email is already registered. Please use a different email address.");
-          }
-          throw authError;
-        }
+        if (authError) throw authError;
+        if (!authData.user) throw new Error("Failed to create chef account");
 
         // Create chef record
-        const { error: chefError } = await supabase
-          .from('chefs')
-          .insert([submissionData]);
-
-        if (chefError) throw chefError;
-
-        toast({
-          title: "Success",
-          description: "Chef created successfully",
+        const { error: insertError } = await supabase.from("chefs").insert({
+          id: authData.user.id,
+          name: formData.name,
+          email: formData.email.trim().toLowerCase(),
+          speciality: formData.speciality || null,
+          experience_years: formData.experience_years || null,
+          phone: formData.phone || null,
         });
+
+        if (insertError) throw insertError;
       }
+
+      toast({
+        title: "Success",
+        description: `Chef ${initialData ? "updated" : "created"} successfully`,
+      });
       onSuccess();
     } catch (error: any) {
+      console.error("Chef form error:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to save chef",
       });
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <ChefFormFields
-        formData={formData}
-        isNewChef={!initialData}
-        onChange={handleFormDataChange}
-      />
-      <div className="flex justify-end space-x-2">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button type="submit" disabled={loading}>
-          {loading ? 'Saving...' : initialData ? 'Update' : 'Create'}
-        </Button>
-      </div>
-    </form>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Name</FormLabel>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input {...field} type="email" disabled={!!initialData} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {!initialData && (
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Password</FormLabel>
+                <FormControl>
+                  <Input {...field} type="password" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
+        <FormField
+          control={form.control}
+          name="speciality"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Speciality (Optional)</FormLabel>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="experience_years"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Years of Experience (Optional)</FormLabel>
+              <FormControl>
+                <Input {...field} type="number" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="phone"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Phone (Optional)</FormLabel>
+              <FormControl>
+                <Input {...field} type="tel" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="flex justify-end space-x-2">
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Saving..." : initialData ? "Update Chef" : "Add Chef"}
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 };
