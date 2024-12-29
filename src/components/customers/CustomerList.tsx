@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Plus, User, Edit, Trash } from 'lucide-react';
 import { CustomerForm } from './CustomerForm';
+import { useNavigate } from 'react-router-dom';
 
 export const CustomerList = () => {
   const [customers, setCustomers] = useState<any[]>([]);
@@ -15,6 +16,7 @@ export const CustomerList = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const fetchCustomers = async () => {
     try {
@@ -70,6 +72,13 @@ export const CustomerList = () => {
           .eq('id', profileData.id);
 
         if (profileDeleteError) throw profileDeleteError;
+
+        // Sign out the user if they're currently logged in
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.id === profileData.id) {
+          await supabase.auth.signOut({ scope: 'local' });
+          navigate('/restaurant');
+        }
 
         try {
           // Try to delete the auth user, but don't throw if it fails
