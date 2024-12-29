@@ -1,15 +1,16 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Edit, Trash } from 'lucide-react';
+import { Edit, Trash, Plus } from 'lucide-react';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 
 interface FoodCardProps {
   item: any;
-  onEdit: (item: any) => void;
-  onDelete: (item: any) => void;
+  onEdit?: (item: any) => void;
+  onDelete?: (item: any) => void;
+  onSelect?: (item: any) => void;
 }
 
-export const FoodCard = ({ item, onEdit, onDelete }: FoodCardProps) => {
+export const FoodCard = ({ item, onEdit, onDelete, onSelect }: FoodCardProps) => {
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow">
       <AspectRatio ratio={1}>
@@ -29,20 +30,37 @@ export const FoodCard = ({ item, onEdit, onDelete }: FoodCardProps) => {
           <span className="capitalize">{item.course_type}</span>
         </div>
         <div className="flex justify-end space-x-2">
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => onEdit(item)}
-          >
-            <Edit className="h-4 w-4" />
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => onDelete(item)}
-          >
-            <Trash className="h-4 w-4" />
-          </Button>
+          {onSelect ? (
+            <Button 
+              variant="secondary"
+              onClick={() => onSelect(item)}
+              className="w-full"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add to Menu
+            </Button>
+          ) : (
+            <>
+              {onEdit && (
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => onEdit(item)}
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+              )}
+              {onDelete && (
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => onDelete(item)}
+                >
+                  <Trash className="h-4 w-4" />
+                </Button>
+              )}
+            </>
+          )}
         </div>
       </div>
     </Card>
