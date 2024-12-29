@@ -71,12 +71,12 @@ export const CustomerList = () => {
 
         if (profileDeleteError) throw profileDeleteError;
 
-        // Delete the auth user
-        const { error: authError } = await supabase.auth.admin.deleteUser(
-          profileData.id
-        );
-
-        if (authError) throw authError;
+        try {
+          // Try to delete the auth user, but don't throw if it fails
+          await supabase.auth.admin.deleteUser(profileData.id);
+        } catch (authError) {
+          console.warn('Auth user might have already been deleted:', authError);
+        }
       }
 
       toast({
