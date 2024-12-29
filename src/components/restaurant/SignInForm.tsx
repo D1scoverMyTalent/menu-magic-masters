@@ -32,14 +32,32 @@ export const SignInForm = ({ onSuccess }: SignInFormProps) => {
 
       if (signInError) throw signInError;
 
-      // Fetch user profile to get role
+      // Fetch user profile to get role, using maybeSingle() to handle no results
       const { data: profile } = await supabase
         .from('profiles')
         .select('role')
         .eq('email', data.email)
-        .single();
+        .maybeSingle();
 
-      if (profile?.role === 'customer') {
+      if (!profile) {
+        // Clear local session since profile doesn't exist
+        try {
+          supabase.auth.signOut({ scope: 'local' }).catch(() => {
+            console.log('Sign out failed, but continuing with error handling');
+          });
+        } catch (error) {
+          console.log('Sign out error caught:', error);
+        }
+
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "User profile not found. Please contact support.",
+        });
+        return;
+      }
+
+      if (profile.role === 'customer') {
         navigate('/customer');
       } else {
         onSuccess();
