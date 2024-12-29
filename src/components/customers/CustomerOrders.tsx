@@ -31,8 +31,6 @@ export const CustomerOrders = ({ orders, refetch }) => {
       const { error: quoteError } = await supabase
         .from('quotes')
         .update({ 
-          total_price: price,
-          quote_status: 'pending',
           is_confirmed: false
         })
         .eq('id', quoteId);
@@ -54,18 +52,12 @@ export const CustomerOrders = ({ orders, refetch }) => {
     }
   };
 
-  const handleStatusUpdate = async (id: string, action: 'received' | 'confirm', selectedChefQuote?: any) => {
+  const handleConfirmQuote = async (id: string, selectedChefQuote?: any) => {
     try {
-      const updateData = action === 'received' 
-        ? { 
-            order_status: 'received' as const 
-          }
-        : { 
-            is_confirmed: true, 
-            order_status: 'confirmed' as const,
-            quote_status: 'approved' as const,
-            chef_id: selectedChefQuote?.chef_id
-          };
+      const updateData = { 
+        is_confirmed: true,
+        chef_id: selectedChefQuote?.chef_id
+      };
 
       const { error } = await supabase
         .from('quotes')
@@ -76,9 +68,7 @@ export const CustomerOrders = ({ orders, refetch }) => {
 
       toast({
         title: "Success",
-        description: action === 'received' 
-          ? "Order marked as received"
-          : "Order confirmed successfully",
+        description: "Quote confirmed successfully",
       });
 
       refetch();
@@ -104,11 +94,6 @@ export const CustomerOrders = ({ orders, refetch }) => {
               <p>Location: {order.party_location}</p>
               <p>Vegetarian Guests: {order.veg_guests}</p>
               <p>Non-vegetarian Guests: {order.non_veg_guests}</p>
-              {order.total_price && (
-                <p className="mt-4 text-lg font-semibold">
-                  Total Price: ${order.total_price}
-                </p>
-              )}
             </div>
             <div>
               <h3 className="font-semibold mb-2">Menu Items</h3>
@@ -154,18 +139,9 @@ export const CustomerOrders = ({ orders, refetch }) => {
               )}
             </div>
             <div className="space-y-4">
-              <h3 className="font-semibold mb-2">Order Status</h3>
-              <OrderProgress 
-                quoteStatus={order.quote_status} 
-                orderStatus={order.order_status}
-              />
-              {order.order_status === 'delivered' && (
-                <Button
-                  onClick={() => handleStatusUpdate(order.id, 'received')}
-                >
-                  Mark as Received
-                </Button>
-              )}
+              <h3 className="font-semibold mb-2">Status</h3>
+              <OrderProgress isConfirmed={order.is_confirmed} />
+              
               {!order.is_confirmed && order.chef_quotes?.some(quote => quote.quote_status === 'approved') && (
                 <Button
                   variant="default"
@@ -182,10 +158,10 @@ export const CustomerOrders = ({ orders, refetch }) => {
                       });
                       return;
                     }
-                    handleStatusUpdate(order.id, 'confirm', approvedChefQuote);
+                    handleConfirmQuote(order.id, approvedChefQuote);
                   }}
                 >
-                  Confirm Order (${order.total_price})
+                  Confirm Quote
                 </Button>
               )}
             </div>

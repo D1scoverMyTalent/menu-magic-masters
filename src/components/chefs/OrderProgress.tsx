@@ -1,37 +1,23 @@
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
+import { Check, Clock } from "lucide-react";
 
 interface OrderProgressProps {
   isConfirmed: boolean;
 }
 
 export const OrderProgress = ({ isConfirmed }: OrderProgressProps) => {
-  const getProgressValue = (isConfirmed: boolean) => {
-    return isConfirmed ? 100 : 50;
-  };
-
-  const getStatusColor = (isConfirmed: boolean) => {
-    return isConfirmed ? 'bg-green-600' : 'bg-yellow-600';
-  };
-
-  const getDisplayStatus = (isConfirmed: boolean) => {
-    return isConfirmed ? 'Confirmed' : 'Pending';
-  };
-
   return (
-    <div className="space-y-2">
-      <div className="flex justify-between items-center">
-        <Badge 
-          variant={isConfirmed ? 'default' : 'secondary'}
-          className="font-semibold"
-        >
-          {getDisplayStatus(isConfirmed)}
-        </Badge>
-      </div>
-      <Progress 
-        value={getProgressValue(isConfirmed)} 
-        className={`${getStatusColor(isConfirmed)} h-3 rounded-lg`} 
-      />
+    <div className="flex items-center gap-2">
+      {isConfirmed ? (
+        <>
+          <Check className="h-4 w-4 text-green-500" />
+          <span className="text-sm text-green-500">Confirmed</span>
+        </>
+      ) : (
+        <>
+          <Clock className="h-4 w-4 text-yellow-500" />
+          <span className="text-sm text-yellow-500">Pending</span>
+        </>
+      )}
     </div>
   );
 };

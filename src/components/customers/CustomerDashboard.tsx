@@ -67,7 +67,7 @@ export const CustomerDashboard = () => {
       if (error) {
         toast({
           variant: "destructive",
-          title: "Error fetching orders",
+          title: "Error fetching quotes",
           description: error.message,
         });
         throw error;
@@ -78,18 +78,15 @@ export const CustomerDashboard = () => {
 
   const handleSignOut = async () => {
     try {
-      // First try to sign out normally
       const { error } = await supabase.auth.signOut({
-        scope: 'local'  // Changed from 'global' to 'local'
+        scope: 'local'
       });
       
       if (error) throw error;
       
     } catch (error: any) {
       console.warn('Sign out error:', error);
-      // Even if there's an error, we should still clear local state and redirect
     } finally {
-      // Always navigate away, regardless of logout success
       navigate('/restaurant');
     }
   };
@@ -98,7 +95,7 @@ export const CustomerDashboard = () => {
 
   if (error) return (
     <div className="container mx-auto py-8">
-      <div className="text-red-500">Error loading orders. Please try again later.</div>
+      <div className="text-red-500">Error loading quotes. Please try again later.</div>
     </div>
   );
 
@@ -106,7 +103,7 @@ export const CustomerDashboard = () => {
     <div className="min-h-screen bg-background">
       <DashboardNav userName={customerName} onSignOut={handleSignOut} />
       <div className="container mx-auto py-8">
-        <h2 className="text-3xl font-bold mb-6">My Orders</h2>
+        <h2 className="text-3xl font-bold mb-6">My Quotes</h2>
         <CustomerOrders orders={orders} refetch={refetch} />
       </div>
     </div>
