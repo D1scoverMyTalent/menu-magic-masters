@@ -26,7 +26,7 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
     try {
       setLoading(true);
       
-      // Sign up the user
+      // Sign up the user with metadata
       const { error: signUpError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -38,20 +38,6 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
       });
 
       if (signUpError) throw signUpError;
-
-      // Update the profile with additional information
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({
-            full_name: data.fullName,
-            phone: data.phone,
-          })
-          .eq('id', user.id);
-
-        if (profileError) throw profileError;
-      }
 
       toast({
         title: "Success",
