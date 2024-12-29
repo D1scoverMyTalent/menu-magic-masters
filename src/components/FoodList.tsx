@@ -9,7 +9,11 @@ import { FoodItemForm } from './FoodItemForm';
 import { FoodCard } from './food/FoodCard';
 import { FoodFilters } from './food/FoodFilters';
 
-export const FoodList = () => {
+interface FoodListProps {
+  onSelect?: (item: any) => void;
+}
+
+export const FoodList = ({ onSelect }: FoodListProps) => {
   const [foodItems, setFoodItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dietaryFilter, setDietaryFilter] = useState<string>('all');
@@ -91,10 +95,12 @@ export const FoodList = () => {
           onDietaryFilterChange={setDietaryFilter}
           onCourseFilterChange={setCourseFilter}
         />
-        <Button onClick={() => setIsFormOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Food Item
-        </Button>
+        {!onSelect && (
+          <Button onClick={() => setIsFormOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Food Item
+          </Button>
+        )}
       </div>
 
       {loading ? (
@@ -105,51 +111,54 @@ export const FoodList = () => {
             <FoodCard
               key={item.id}
               item={item}
-              onEdit={(item) => {
+              onSelect={onSelect}
+              onEdit={!onSelect ? (item) => {
                 setSelectedItem(item);
                 setIsFormOpen(true);
-              }}
-              onDelete={(item) => {
+              } : undefined}
+              onDelete={!onSelect ? (item) => {
                 setSelectedItem(item);
                 setIsDeleteDialogOpen(true);
-              }}
+              } : undefined}
             />
           ))}
         </div>
       )}
 
-      {/* Create/Edit Dialog */}
-      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{selectedItem ? 'Edit Food Item' : 'Add Food Item'}</DialogTitle>
-          </DialogHeader>
-          <FoodItemForm
-            initialData={selectedItem}
-            onSuccess={handleFormSuccess}
-            onCancel={() => {
-              setIsFormOpen(false);
-              setSelectedItem(null);
-            }}
-          />
-        </DialogContent>
-      </Dialog>
+      {!onSelect && (
+        <>
+          <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>{selectedItem ? 'Edit Food Item' : 'Add Food Item'}</DialogTitle>
+              </DialogHeader>
+              <FoodItemForm
+                initialData={selectedItem}
+                onSuccess={handleFormSuccess}
+                onCancel={() => {
+                  setIsFormOpen(false);
+                  setSelectedItem(null);
+                }}
+              />
+            </DialogContent>
+          </Dialog>
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the food item.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setSelectedItem(null)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+          <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete the food item.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel onClick={() => setSelectedItem(null)}>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </>
+      )}
     </div>
   );
 };

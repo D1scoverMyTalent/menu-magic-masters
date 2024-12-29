@@ -9,6 +9,54 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      chef_menu_items: {
+        Row: {
+          chef_id: string
+          created_at: string
+          custom_ingredients: string | null
+          food_item_id: string
+          id: string
+          is_active: boolean | null
+          recipe_notes: string | null
+          visibility: Database["public"]["Enums"]["recipe_visibility"] | null
+        }
+        Insert: {
+          chef_id: string
+          created_at?: string
+          custom_ingredients?: string | null
+          food_item_id: string
+          id?: string
+          is_active?: boolean | null
+          recipe_notes?: string | null
+          visibility?: Database["public"]["Enums"]["recipe_visibility"] | null
+        }
+        Update: {
+          chef_id?: string
+          created_at?: string
+          custom_ingredients?: string | null
+          food_item_id?: string
+          id?: string
+          is_active?: boolean | null
+          recipe_notes?: string | null
+          visibility?: Database["public"]["Enums"]["recipe_visibility"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chef_menu_items_chef_id_fkey"
+            columns: ["chef_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chef_menu_items_food_item_id_fkey"
+            columns: ["food_item_id"]
+            isOneToOne: false
+            referencedRelation: "food_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chef_quotes: {
         Row: {
           chef_id: string | null
@@ -316,6 +364,7 @@ export type Database = {
         | "delivered"
         | "received"
       quote_status: "pending" | "approved" | "rejected" | "rejected_by_customer"
+      recipe_visibility: "public" | "private"
       user_role: "admin" | "chef" | "customer" | "delivery"
     }
     CompositeTypes: {
