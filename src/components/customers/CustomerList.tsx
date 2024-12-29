@@ -125,13 +125,13 @@ export const CustomerList = () => {
                   <User className="h-6 w-6 text-primary" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold">{customer.name}</h3>
-                  <p className="text-sm text-muted-foreground">{customer.email}</p>
+                  <h3 className="font-semibold text-[#800000]">{customer.name}</h3>
+                  <p className="text-sm text-[#800000]">{customer.email}</p>
                   {customer.phone && (
-                    <p className="text-sm text-muted-foreground">{customer.phone}</p>
+                    <p className="text-sm text-[#800000]">{customer.phone}</p>
                   )}
                   {customer.address && (
-                    <p className="text-sm text-muted-foreground">{customer.address}</p>
+                    <p className="text-sm text-[#800000]">{customer.address}</p>
                   )}
                 </div>
                 <div className="flex space-x-2">
