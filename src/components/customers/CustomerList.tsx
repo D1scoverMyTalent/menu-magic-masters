@@ -21,12 +21,23 @@ export const CustomerList = () => {
   const fetchCustomers = async () => {
     try {
       const { data, error } = await supabase
-        .from('customers')
+        .from('profiles')
         .select('*')
-        .order('name');
+        .eq('role', 'customer')  // Only fetch users with 'customer' role
+        .order('full_name');
 
       if (error) throw error;
-      setCustomers(data || []);
+      
+      // Map the profiles data to match the expected customer format
+      const formattedCustomers = data?.map(profile => ({
+        id: profile.id,
+        name: profile.full_name || 'Unknown',
+        email: profile.email,
+        phone: profile.phone,
+        address: profile.address
+      })) || [];
+
+      setCustomers(formattedCustomers);
     } catch (error: any) {
       console.error('Error fetching customers:', error.message);
       toast({
@@ -47,51 +58,13 @@ export const CustomerList = () => {
     if (!selectedCustomer) return;
 
     try {
-      // First, get the profile to find the auth user ID
-      const { data: profileData, error: profileError } = await supabase
+      // Delete from profiles table
+      const { error: profileError } = await supabase
         .from('profiles')
-        .select('id')
-        .eq('email', selectedCustomer.email)
-        .single();
-
-      if (profileError) throw profileError;
-
-      // Delete from customers table
-      const { error: customerError } = await supabase
-        .from('customers')
         .delete()
         .eq('id', selectedCustomer.id);
 
-      if (customerError) throw customerError;
-
-      // Delete from profiles table
-      if (profileData?.id) {
-        const { error: profileDeleteError } = await supabase
-          .from('profiles')
-          .delete()
-          .eq('id', profileData.id);
-
-        if (profileDeleteError) throw profileDeleteError;
-
-        // Check if this is the current user
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user?.id === profileData.id) {
-          try {
-            await supabase.auth.signOut({ scope: 'local' });
-          } catch (signOutError) {
-            console.warn('Sign out error:', signOutError);
-            // Even if sign out fails, we'll still redirect
-          } finally {
-            navigate('/restaurant');
-          }
-        }
-
-        try {
-          await supabase.auth.admin.deleteUser(profileData.id);
-        } catch (authError) {
-          console.warn('Auth user might have already been deleted:', authError);
-        }
-      }
+      if (profileError) throw profileError;
 
       toast({
         title: "Success",
