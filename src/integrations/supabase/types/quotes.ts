@@ -1,10 +1,10 @@
-import { DietaryPreference, CourseType, QuoteStatus, OrderStatus } from './enums';
+import { DietaryPreference, CourseType } from './enums';
 
 export interface ChefQuote {
   id: string;
   chef_id: string | null;
   price: number;
-  quote_status: QuoteStatus | null;
+  quote_status: string | null;
   is_visible_to_customer: boolean | null;
 }
 
@@ -24,14 +24,10 @@ export interface QuoteItem {
 export interface Quote {
   id: string;
   customer_id: string | null;
-  chef_id: string | null;
   party_date: string | null;
   party_location: string | null;
   veg_guests: number | null;
   non_veg_guests: number | null;
-  quote_status: QuoteStatus | null;
-  order_status: OrderStatus | null;
-  total_price: number | null;
   is_confirmed: boolean | null;
   created_at: string;
   profiles?: {

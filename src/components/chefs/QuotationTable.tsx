@@ -5,19 +5,16 @@ import { Input } from "@/components/ui/input";
 import { Check } from "lucide-react";
 import { format } from "date-fns";
 import { OrderProgress } from "./OrderProgress";
-import { QuoteStatus, OrderStatus } from "@/integrations/supabase/types/enums";
 import type { Quote } from "@/integrations/supabase/types/quotes";
 import { useState } from "react";
 
 interface QuotationTableProps {
   quotations: Quote[];
-  onStatusUpdate: (id: string, quoteStatus: QuoteStatus, orderStatus?: OrderStatus) => void;
   onQuoteSubmit: (quoteId: string, price: number) => void;
 }
 
 export const QuotationTable = ({ 
   quotations, 
-  onStatusUpdate,
   onQuoteSubmit
 }: QuotationTableProps) => {
   const [prices, setPrices] = useState<Record<string, string>>({});
@@ -105,13 +102,10 @@ export const QuotationTable = ({
                 </Card>
               </TableCell>
               <TableCell className="text-[#600000]">
-                <OrderProgress 
-                  quoteStatus={quotation.quote_status} 
-                  orderStatus={quotation.order_status}
-                />
+                <OrderProgress isConfirmed={quotation.is_confirmed || false} />
               </TableCell>
               <TableCell>
-                {quotation.quote_status === 'pending' && !quotation.chef_quotes?.some(q => q.chef_id === quotation.chef_id) && (
+                {!quotation.chef_quotes?.some(q => q.chef_id === quotation.customer_id) && !quotation.is_confirmed && (
                   <div className="space-y-2">
                     <div className="flex items-center space-x-2">
                       <Input
@@ -136,24 +130,6 @@ export const QuotationTable = ({
                       </Button>
                     </div>
                   </div>
-                )}
-                {quotation.quote_status === 'approved' && quotation.order_status === 'confirmed' && (
-                  <Button
-                    size="sm"
-                    onClick={() => onStatusUpdate(quotation.id, 'approved', 'processing')}
-                    className="bg-[#600000] hover:bg-[#600000]/90 text-white"
-                  >
-                    Start Processing
-                  </Button>
-                )}
-                {quotation.quote_status === 'approved' && quotation.order_status === 'processing' && (
-                  <Button
-                    size="sm"
-                    onClick={() => onStatusUpdate(quotation.id, 'approved', 'ready_to_deliver')}
-                    className="bg-[#600000] hover:bg-[#600000]/90 text-white"
-                  >
-                    Mark Ready
-                  </Button>
                 )}
               </TableCell>
             </TableRow>
