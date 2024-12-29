@@ -1,91 +1,101 @@
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { UseFormReturn } from "react-hook-form";
+import { ChefFormData } from "./types";
 
 interface ChefFormFieldsProps {
-  formData: {
-    name: string;
-    email: string;
-    speciality: string;
-    experience_years: string;
-    phone: string;
-    password?: string;
-  };
-  isNewChef: boolean;
-  onChange: (field: string, value: string) => void;
+  form: UseFormReturn<ChefFormData>;
+  isEditing: boolean;
 }
 
-export const ChefFormFields = ({ formData, isNewChef, onChange }: ChefFormFieldsProps) => {
+export const ChefFormFields = ({ form, isEditing }: ChefFormFieldsProps) => {
   return (
     <>
-      <div className="space-y-2">
-        <Label htmlFor="name">Name</Label>
-        <Input
-          id="name"
-          placeholder="Enter chef's name"
-          value={formData.name}
-          onChange={(e) => onChange('name', e.target.value)}
-          required
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          type="email"
-          placeholder="Enter email address"
-          value={formData.email}
-          onChange={(e) => onChange('email', e.target.value)}
-          required
-        />
-      </div>
+      <FormField
+        control={form.control}
+        name="name"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Name</FormLabel>
+            <FormControl>
+              <Input {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
 
-      {isNewChef && (
-        <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
-          <Input
-            id="password"
-            type="password"
-            placeholder="Enter password"
-            value={formData.password}
-            onChange={(e) => onChange('password', e.target.value)}
-            required
-            minLength={6}
-          />
-        </div>
+      <FormField
+        control={form.control}
+        name="email"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Email</FormLabel>
+            <FormControl>
+              <Input {...field} type="email" disabled={isEditing} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      {!isEditing && (
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Password</FormLabel>
+              <FormControl>
+                <Input {...field} type="password" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       )}
 
-      <div className="space-y-2">
-        <Label htmlFor="speciality">Speciality</Label>
-        <Input
-          id="speciality"
-          placeholder="Enter chef's speciality"
-          value={formData.speciality}
-          onChange={(e) => onChange('speciality', e.target.value)}
-        />
-      </div>
+      <FormField
+        control={form.control}
+        name="speciality"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Speciality (Optional)</FormLabel>
+            <FormControl>
+              <Input {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
 
-      <div className="space-y-2">
-        <Label htmlFor="experience">Years of Experience</Label>
-        <Input
-          id="experience"
-          type="number"
-          placeholder="Enter years of experience"
-          value={formData.experience_years}
-          onChange={(e) => onChange('experience_years', e.target.value)}
-        />
-      </div>
+      <FormField
+        control={form.control}
+        name="experience_years"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Years of Experience (Optional)</FormLabel>
+            <FormControl>
+              <Input {...field} type="number" />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
 
-      <div className="space-y-2">
-        <Label htmlFor="phone">Phone Number</Label>
-        <Input
-          id="phone"
-          type="tel"
-          placeholder="Enter phone number"
-          value={formData.phone}
-          onChange={(e) => onChange('phone', e.target.value)}
-        />
-      </div>
+      <FormField
+        control={form.control}
+        name="phone"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Phone (Optional)</FormLabel>
+            <FormControl>
+              <Input {...field} type="tel" />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
     </>
   );
 };
