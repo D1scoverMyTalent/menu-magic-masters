@@ -45,12 +45,39 @@ export const CustomerList = () => {
     if (!selectedCustomer) return;
 
     try {
-      const { error } = await supabase
+      // First, get the profile to find the auth user ID
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', selectedCustomer.email)
+        .single();
+
+      if (profileError) throw profileError;
+
+      // Delete from customers table
+      const { error: customerError } = await supabase
         .from('customers')
         .delete()
         .eq('id', selectedCustomer.id);
 
-      if (error) throw error;
+      if (customerError) throw customerError;
+
+      // Delete from profiles table
+      if (profileData?.id) {
+        const { error: profileDeleteError } = await supabase
+          .from('profiles')
+          .delete()
+          .eq('id', profileData.id);
+
+        if (profileDeleteError) throw profileDeleteError;
+
+        // Delete the auth user
+        const { error: authError } = await supabase.auth.admin.deleteUser(
+          profileData.id
+        );
+
+        if (authError) throw authError;
+      }
 
       toast({
         title: "Success",
@@ -59,6 +86,7 @@ export const CustomerList = () => {
       
       fetchCustomers();
     } catch (error: any) {
+      console.error('Delete error:', error);
       toast({
         variant: "destructive",
         title: "Error",
