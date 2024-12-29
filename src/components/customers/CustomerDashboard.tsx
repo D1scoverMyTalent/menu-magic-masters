@@ -78,11 +78,16 @@ export const CustomerDashboard = () => {
 
   const handleSignOut = async () => {
     try {
-      await supabase.auth.signOut();
+      // First try to sign out normally
+      const { error } = await supabase.auth.signOut({
+        scope: 'local'  // Changed from 'global' to 'local'
+      });
+      
+      if (error) throw error;
+      
     } catch (error: any) {
-      console.warn('Error during sign out:', error);
-      // Even if server-side logout fails, clear local session
-      await supabase.auth.clearSession();
+      console.warn('Sign out error:', error);
+      // Even if there's an error, we should still clear local state and redirect
     } finally {
       // Always navigate away, regardless of logout success
       navigate('/restaurant');
