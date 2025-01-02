@@ -1,8 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CustomerOrders } from "./CustomerOrders";
 import { useToast } from "@/hooks/use-toast";
 import { DashboardNav } from "../shared/DashboardNav";
 
@@ -32,50 +30,6 @@ export const CustomerDashboard = () => {
     checkAuth();
   }, [navigate]);
 
-  const { data: orders, isLoading, error, refetch } = useQuery({
-    queryKey: ['customer-orders'],
-    queryFn: async () => {
-      const { data: quotes, error } = await supabase
-        .from('quotes')
-        .select(`
-          *,
-          profiles!quotes_customer_id_fkey (
-            full_name,
-            email
-          ),
-          quote_items (
-            quantity,
-            food_items (
-              name,
-              dietary_preference,
-              course_type
-            )
-          ),
-          chef_quotes (
-            id,
-            chef_id,
-            price,
-            quote_status,
-            is_visible_to_customer,
-            profiles:chef_id (
-              full_name
-            )
-          )
-        `)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        toast({
-          variant: "destructive",
-          title: "Error fetching quotes",
-          description: error.message,
-        });
-        throw error;
-      }
-      return quotes || [];
-    },
-  });
-
   const handleSignOut = async () => {
     try {
       const { error } = await supabase.auth.signOut({
@@ -91,20 +45,12 @@ export const CustomerDashboard = () => {
     }
   };
 
-  if (isLoading) return <div className="flex items-center justify-center p-8">Loading...</div>;
-
-  if (error) return (
-    <div className="container mx-auto py-8">
-      <div className="text-red-500">Error loading quotes. Please try again later.</div>
-    </div>
-  );
-
   return (
     <div className="min-h-screen bg-background">
       <DashboardNav userName={customerName} onSignOut={handleSignOut} />
       <div className="container mx-auto py-8">
-        <h2 className="text-3xl font-bold mb-6">My Quotes</h2>
-        <CustomerOrders orders={orders} refetch={refetch} />
+        <h2 className="text-3xl font-bold mb-6">Dashboard</h2>
+        <p className="text-muted-foreground">Welcome to your dashboard!</p>
       </div>
     </div>
   );
