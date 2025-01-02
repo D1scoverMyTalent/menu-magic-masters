@@ -1,6 +1,6 @@
 import { Check, Clock } from "lucide-react";
 
-interface OrderProgressProps {
+export interface OrderProgressProps {
   isConfirmed: boolean;
 }
 

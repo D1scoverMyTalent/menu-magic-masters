@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { QuoteStatus, OrderStatus } from "@/integrations/supabase/types/enums";
 
 export const useQuotes = (session: any) => {
   const { toast } = useToast();
@@ -48,14 +47,10 @@ export const useQuotes = (session: any) => {
 
       // Filter quotes to show:
       // 1. All pending quotes that don't have a chef assigned
-      // 2. Quotes specifically assigned to this chef
-      // 3. Quotes where this chef has submitted a quote
+      // 2. Quotes where this chef has submitted a quote
       return quotes?.filter(quote => {
         // Show all pending quotes that don't have a chef assigned
-        if (quote.quote_status === 'pending' && !quote.chef_id) return true;
-        
-        // Show quotes assigned to this specific chef
-        if (quote.chef_id === session.user.id) return true;
+        if (!quote.is_confirmed) return true;
         
         // Show quotes where this chef has already submitted a quote
         if (quote.chef_quotes?.some(q => q.chef_id === session.user.id)) return true;
@@ -114,43 +109,9 @@ export const useQuotes = (session: any) => {
     }
   };
 
-  const handleStatusUpdate = async (
-    quoteId: string,
-    quoteStatus: QuoteStatus,
-    orderStatus?: OrderStatus
-  ) => {
-    try {
-      const updateData: any = { quote_status: quoteStatus };
-      if (orderStatus) {
-        updateData.order_status = orderStatus;
-      }
-
-      const { error } = await supabase
-        .from('quotes')
-        .update(updateData)
-        .eq('id', quoteId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Status updated successfully",
-      });
-
-      queryClient.invalidateQueries({ queryKey: ['chef-quotes'] });
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message,
-      });
-    }
-  };
-
   return {
     quotes,
     isLoading,
-    handleQuoteSubmission,
-    handleStatusUpdate
+    handleQuoteSubmission
   };
 };

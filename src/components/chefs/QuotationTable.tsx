@@ -8,7 +8,7 @@ import { OrderProgress } from "./OrderProgress";
 import type { Quote } from "@/integrations/supabase/types/quotes";
 import { useState } from "react";
 
-interface QuotationTableProps {
+export interface QuotationTableProps {
   quotations: Quote[];
   onQuoteSubmit: (quoteId: string, price: number) => void;
 }

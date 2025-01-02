@@ -7,7 +7,7 @@ import { ChefMenuManager } from "./menu/ChefMenuManager";
 
 export const ChefDashboard = () => {
   const { session, chefName, handleSignOut } = useChefAuth();
-  const { quotes, isLoading, handleQuoteSubmission, handleStatusUpdate } = useQuotes(session);
+  const { quotes, isLoading, handleQuoteSubmission } = useQuotes(session);
 
   if (isLoading) return <div>Loading...</div>;
 
@@ -36,7 +36,6 @@ export const ChefDashboard = () => {
             <div className="bg-white rounded-lg shadow-sm">
               <QuotationTable 
                 quotations={quotes || []} 
-                onStatusUpdate={handleStatusUpdate}
                 onQuoteSubmit={handleQuoteSubmission}
               />
             </div>

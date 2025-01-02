@@ -44,13 +44,7 @@ export const DeliveryCard = ({ order, onStatusUpdate }: DeliveryCardProps) => {
         </div>
         <div className="space-y-4">
           <h3 className="font-semibold mb-2">Order Status</h3>
-          <OrderProgress 
-            quoteStatus={order.quote_status} 
-            orderStatus={order.order_status}
-          />
-          {order.order_status === 'received' && (
-            <Badge variant="secondary">Received by Customer</Badge>
-          )}
+          <OrderProgress isConfirmed={order.is_confirmed || false} />
           <DeliveryActions
             order={order}
             onStatusUpdate={onStatusUpdate}
