@@ -1,47 +1,62 @@
-import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { DashboardNav } from "../shared/DashboardNav";
 
 export const CustomerDashboard = () => {
+  const [customerName, setCustomerName] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [customerName, setCustomerName] = useState("");
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate('/restaurant');
-        return;
-      }
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          navigate('/login');
+          return;
+        }
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('full_name')
-        .eq('id', session.user.id)
-        .single();
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', session.user.id)
+          .single();
 
-      if (profile) {
-        setCustomerName(profile.full_name);
+        if (profile) {
+          setCustomerName(profile.full_name || '');
+        }
+      } catch (error: any) {
+        console.error('Auth check error:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to verify authentication",
+        });
+        navigate('/login');
       }
     };
+
     checkAuth();
-  }, [navigate]);
+  }, [navigate, toast]);
 
   const handleSignOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut({
-        scope: 'local'
+      await supabase.auth.signOut();
+      navigate('/login');
+      toast({
+        title: "Success",
+        description: "Signed out successfully",
       });
-      
-      if (error) throw error;
-      
     } catch (error: any) {
-      console.warn('Sign out error:', error);
-    } finally {
-      navigate('/restaurant');
+      console.error('Sign out error:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to sign out",
+      });
     }
   };
 
