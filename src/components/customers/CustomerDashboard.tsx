@@ -15,7 +15,7 @@ export const CustomerDashboard = () => {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session) {
-          navigate('/login');
+          navigate('/restaurant');
           return;
         }
 
@@ -23,7 +23,7 @@ export const CustomerDashboard = () => {
           .from('profiles')
           .select('full_name')
           .eq('id', session.user.id)
-          .single();
+          .maybeSingle();
 
         if (profile) {
           setCustomerName(profile.full_name || '');
@@ -35,7 +35,7 @@ export const CustomerDashboard = () => {
           title: "Error",
           description: "Failed to verify authentication",
         });
-        navigate('/login');
+        navigate('/restaurant');
       }
     };
 
@@ -45,7 +45,7 @@ export const CustomerDashboard = () => {
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
-      navigate('/login');
+      navigate('/restaurant');
       toast({
         title: "Success",
         description: "Signed out successfully",
