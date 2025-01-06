@@ -5,6 +5,7 @@ import { RestaurantNav } from './navigation/RestaurantNav';
 import { HeroSection } from './sections/HeroSection';
 import { MenuSection } from './sections/MenuSection';
 import { FooterSection } from './sections/FooterSection';
+import { useToast } from "@/hooks/use-toast";
 
 export const RestaurantMenu = () => {
   const { user, isInitialized } = useAuth();
@@ -18,6 +19,43 @@ export const RestaurantMenu = () => {
     handleQuoteSuccess
   } = useQuote();
   const [showAuthDialog, setShowAuthDialog] = useState(false);
+  const { toast } = useToast();
+  
+  // Sample food items data - this should come from your database
+  const foodItems = [
+    {
+      id: '1',
+      name: 'Sample Dish 1',
+      description: 'A delicious sample dish',
+      dietary_preference: 'vegetarian',
+      course_type: 'main',
+      image_url: '/placeholder.svg'
+    },
+    // Add more items as needed
+  ];
+
+  const handleAddToQuote = (item: any) => {
+    const existingItem = quoteItems.find(
+      (quoteItem) => quoteItem.foodItem.id === item.id
+    );
+
+    if (existingItem) {
+      setQuoteItems(
+        quoteItems.map((quoteItem) =>
+          quoteItem.foodItem.id === item.id
+            ? { ...quoteItem, quantity: quoteItem.quantity + 1 }
+            : quoteItem
+        )
+      );
+    } else {
+      setQuoteItems([...quoteItems, { foodItem: item, quantity: 1 }]);
+    }
+    
+    toast({
+      title: "Added to Quote",
+      description: `${item.name} has been added to your quote.`,
+    });
+  };
 
   const handleAuthSuccess = () => {
     setShowAuthDialog(false);

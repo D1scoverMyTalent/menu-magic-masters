@@ -2,6 +2,8 @@ import { useState } from "react";
 import { AuthDialog } from "../auth/AuthDialog";
 import { MobileMenu } from "./MobileMenu";
 import { DesktopMenu } from "./DesktopMenu";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface RestaurantNavProps {
   user: any;
@@ -33,6 +35,7 @@ export const RestaurantNav = ({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userName, setUserName] = useState("");
+  const { toast } = useToast();
 
   const handleSignOut = async () => {
     try {
