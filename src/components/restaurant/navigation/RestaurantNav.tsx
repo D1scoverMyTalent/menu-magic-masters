@@ -9,6 +9,8 @@ import { QuoteList } from "../QuoteList";
 import { QuoteForm } from "../QuoteForm";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 interface RestaurantNavProps {
   user: any;
@@ -39,11 +41,22 @@ export const RestaurantNav = ({
 }: RestaurantNavProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userName, setUserName] = useState("");
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setIsAuthenticated(!!session);
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', session.user.id)
+          .single();
+        setUserName(profile?.full_name || '');
+      }
     };
 
     checkSession();
@@ -64,15 +77,26 @@ export const RestaurantNav = ({
       setQuoteItems([]);
       setShowQuoteForm(false);
       setIsQuoteOpen(false);
+      toast({
+        title: "Success",
+        description: "Signed out successfully",
+      });
     } catch (error) {
       console.error('Sign out error:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to sign out",
+      });
     }
   };
 
   return (
     <nav className="bg-primary/95 backdrop-blur-sm sticky top-0 z-50 border-b border-primary/20">
       <div className="container mx-auto flex justify-between items-center py-4 px-4">
-        <h1 className="text-[20px] md:text-[24px] font-bold text-secondary font-['Proza_Libre']">Flavours From Home</h1>
+        <h1 className="text-[20px] md:text-[24px] font-bold text-secondary font-['Proza_Libre']">
+          Flavours From Home
+        </h1>
         
         {/* Mobile Menu */}
         <div className="flex md:hidden">
@@ -109,13 +133,16 @@ export const RestaurantNav = ({
                     <span>Sign In</span>
                   </Button>
                 ) : (
-                  <Button 
-                    variant="ghost" 
-                    className="text-primary w-full justify-start"
-                    onClick={handleSignOut}
-                  >
-                    Sign Out
-                  </Button>
+                  <>
+                    <span className="text-primary px-4">{userName}</span>
+                    <Button 
+                      variant="ghost" 
+                      className="text-primary w-full justify-start"
+                      onClick={handleSignOut}
+                    >
+                      Sign Out
+                    </Button>
+                  </>
                 )}
               </div>
             </SheetContent>
@@ -180,13 +207,16 @@ export const RestaurantNav = ({
               </DialogContent>
             </Dialog>
           ) : (
-            <Button 
-              variant="ghost" 
-              className="text-secondary"
-              onClick={handleSignOut}
-            >
-              Sign Out
-            </Button>
+            <div className="flex items-center gap-4">
+              <span className="text-secondary">{userName}</span>
+              <Button 
+                variant="ghost" 
+                className="text-secondary"
+                onClick={handleSignOut}
+              >
+                Sign Out
+              </Button>
+            </div>
           )}
         </div>
       </div>
