@@ -4,19 +4,22 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface MenuSectionProps {
   foodItems: any[];
   onAddToQuote: (item: any) => void;
   onDietaryFilterChange: (value: string) => void;
   onCourseFilterChange: (value: string) => void;
+  loading?: boolean;
 }
 
 export const MenuSection = ({ 
   foodItems, 
   onAddToQuote,
   onDietaryFilterChange,
-  onCourseFilterChange
+  onCourseFilterChange,
+  loading = false
 }: MenuSectionProps) => {
   const [dietaryFilter, setDietaryFilter] = useState('all');
   const [courseFilter, setCourseFilter] = useState('all');
@@ -56,7 +59,22 @@ export const MenuSection = ({
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-          {filteredItems?.map((item) => (
+          {loading ? (
+            // Loading skeletons
+            Array.from({ length: 6 }).map((_, index) => (
+              <Card key={index} className="overflow-hidden">
+                <AspectRatio ratio={16/9}>
+                  <Skeleton className="w-full h-full" />
+                </AspectRatio>
+                <div className="p-4 space-y-3">
+                  <Skeleton className="h-6 w-3/4" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-1/2" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              </Card>
+            ))
+          ) : filteredItems?.map((item) => (
             <Card key={item.id} className="overflow-hidden hover:shadow-lg transition-shadow border-secondary/20">
               <AspectRatio ratio={16/9}>
                 <img

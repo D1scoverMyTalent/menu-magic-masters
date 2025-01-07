@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from './hooks/useAuth';
 import { useQuote } from './hooks/useQuote';
 import { RestaurantNav } from './navigation/RestaurantNav';
@@ -20,20 +20,34 @@ export const RestaurantMenu = () => {
     handleQuoteSuccess
   } = useQuote();
   const [showAuthDialog, setShowAuthDialog] = useState(false);
+  const [foodItems, setFoodItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  
-  // Sample food items data with proper UUIDs
-  const foodItems = [
-    {
-      id: '123e4567-e89b-12d3-a456-426614174000',
-      name: 'Sample Dish 1',
-      description: 'A delicious sample dish',
-      dietary_preference: 'vegetarian',
-      course_type: 'main',
-      image_url: '/placeholder.svg'
-    },
-    // Add more items as needed
-  ];
+
+  useEffect(() => {
+    const fetchFoodItems = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('food_items')
+          .select('*')
+          .eq('is_available', true);
+
+        if (error) throw error;
+        setFoodItems(data || []);
+      } catch (error: any) {
+        console.error('Error fetching food items:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load menu items",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFoodItems();
+  }, [toast]);
 
   const handleAddToQuote = async (item: any) => {
     try {
@@ -100,6 +114,7 @@ export const RestaurantMenu = () => {
           onAddToQuote={handleAddToQuote}
           onDietaryFilterChange={(value) => console.log('Dietary:', value)}
           onCourseFilterChange={(value) => console.log('Course:', value)}
+          loading={loading}
         />
       </main>
 
