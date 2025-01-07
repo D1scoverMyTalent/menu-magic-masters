@@ -5,12 +5,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { ChefHat, Truck, Edit, Trash } from 'lucide-react';
+import { ChefHat, Truck, Edit, Trash, Plus } from 'lucide-react';
+import { ChefForm } from './chefs/ChefForm';
 
 export const StaffList = ({ role }: { role: 'chef' | 'delivery_staff' }) => {
   const [staffMembers, setStaffMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState<any>(null);
   const { toast } = useToast();
 
@@ -18,9 +20,8 @@ export const StaffList = ({ role }: { role: 'chef' | 'delivery_staff' }) => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('profiles')
-        .select('*, chefs(*)')
-        .eq('role', role === 'chef' ? 'chef' : 'delivery');
+        .from(role === 'chef' ? 'chefs' : 'delivery_personnel')
+        .select('*');
 
       if (error) throw error;
       setStaffMembers(data || []);
@@ -45,7 +46,7 @@ export const StaffList = ({ role }: { role: 'chef' | 'delivery_staff' }) => {
 
     try {
       const { error } = await supabase
-        .from('profiles')
+        .from(role === 'chef' ? 'chefs' : 'delivery_personnel')
         .delete()
         .eq('id', selectedStaff.id);
 
@@ -73,35 +74,60 @@ export const StaffList = ({ role }: { role: 'chef' | 'delivery_staff' }) => {
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-end">
+        <Button onClick={() => {
+          setSelectedStaff(null);
+          setIsFormOpen(true);
+        }}>
+          <Plus className="h-4 w-4 mr-2" />
+          Add {role === 'chef' ? 'Chef' : 'Delivery Staff'}
+        </Button>
+      </div>
+
       {loading ? (
         <div>Loading...</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {staffMembers.map((staff) => (
             <Card key={staff.id} className="p-6">
-              <div className="flex items-center space-x-4">
+              <div className="flex items-start space-x-4">
                 <div className="p-2 bg-primary/10 rounded-full">
                   <StaffIcon className="h-6 w-6 text-primary" />
                 </div>
                 <div className="flex-1 space-y-1">
-                  <h3 className="font-semibold">{staff.full_name}</h3>
+                  <h3 className="font-semibold">
+                    {role === 'chef' 
+                      ? `${staff.first_name} ${staff.last_name}`
+                      : staff.name
+                    }
+                  </h3>
                   <p className="text-sm text-muted-foreground">{staff.email}</p>
                   {staff.phone && (
                     <p className="text-sm text-muted-foreground">{staff.phone}</p>
                   )}
-                  {role === 'chef' && staff.chefs?.[0] && (
+                  {role === 'chef' && (
                     <>
                       <p className="text-sm text-muted-foreground">
-                        Business: {staff.chefs[0].business_name}
+                        Business: {staff.business_name}
                       </p>
-                      {staff.chefs[0].speciality && (
+                      {staff.business_address && (
                         <p className="text-sm text-muted-foreground">
-                          Speciality: {staff.chefs[0].speciality}
+                          Address: {staff.business_address}
+                        </p>
+                      )}
+                      {staff.speciality && (
+                        <p className="text-sm text-muted-foreground">
+                          Speciality: {staff.speciality}
                         </p>
                       )}
                       <p className="text-sm text-muted-foreground">
-                        Experience: {staff.chefs[0].experience_years || 0} years
+                        Experience: {staff.experience_years || 0} years
                       </p>
+                      {staff.min_people_served && staff.max_people_served && (
+                        <p className="text-sm text-muted-foreground">
+                          Capacity: {staff.min_people_served} - {staff.max_people_served} people
+                        </p>
+                      )}
                     </>
                   )}
                 </div>
@@ -111,7 +137,7 @@ export const StaffList = ({ role }: { role: 'chef' | 'delivery_staff' }) => {
                     size="icon"
                     onClick={() => {
                       setSelectedStaff(staff);
-                      // setIsFormOpen(true);
+                      setIsFormOpen(true);
                     }}
                   >
                     <Edit className="h-4 w-4" />
@@ -132,6 +158,31 @@ export const StaffList = ({ role }: { role: 'chef' | 'delivery_staff' }) => {
           ))}
         </div>
       )}
+
+      {/* Chef Form Dialog */}
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedStaff ? 'Edit' : 'Add'} {role === 'chef' ? 'Chef' : 'Delivery Staff'}
+            </DialogTitle>
+          </DialogHeader>
+          {role === 'chef' && (
+            <ChefForm
+              initialData={selectedStaff}
+              onSuccess={() => {
+                setIsFormOpen(false);
+                setSelectedStaff(null);
+                fetchStaffMembers();
+              }}
+              onCancel={() => {
+                setIsFormOpen(false);
+                setSelectedStaff(null);
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
