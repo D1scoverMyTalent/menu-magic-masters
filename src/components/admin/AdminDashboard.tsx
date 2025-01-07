@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FoodList } from "@/components/FoodList";
-import { ChefList } from "@/components/chefs/ChefList";
+import { StaffList } from "@/components/StaffList";
 import { CustomerList } from "@/components/customers/CustomerList";
 import { DashboardNav } from "@/components/shared/DashboardNav";
 import { supabase } from "@/integrations/supabase/client";
@@ -71,16 +71,20 @@ export const AdminDashboard = () => {
       />
       <main className="container mx-auto py-8">
         <Tabs defaultValue="food" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="food">Food Items</TabsTrigger>
             <TabsTrigger value="chefs">Chefs</TabsTrigger>
+            <TabsTrigger value="delivery">Delivery Staff</TabsTrigger>
             <TabsTrigger value="customers">Customers</TabsTrigger>
           </TabsList>
           <TabsContent value="food">
             <FoodList />
           </TabsContent>
           <TabsContent value="chefs">
-            <ChefList />
+            <StaffList role="chef" />
+          </TabsContent>
+          <TabsContent value="delivery">
+            <StaffList role="delivery_staff" />
           </TabsContent>
           <TabsContent value="customers">
             <CustomerList />
