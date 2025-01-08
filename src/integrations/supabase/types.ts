@@ -9,6 +9,74 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      chef_documents: {
+        Row: {
+          chef_id: string | null
+          document_type: string
+          document_url: string
+          id: string
+          uploaded_at: string
+        }
+        Insert: {
+          chef_id?: string | null
+          document_type: string
+          document_url: string
+          id?: string
+          uploaded_at?: string
+        }
+        Update: {
+          chef_id?: string | null
+          document_type?: string
+          document_url?: string
+          id?: string
+          uploaded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chef_documents_chef_id_fkey"
+            columns: ["chef_id"]
+            isOneToOne: false
+            referencedRelation: "chefs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chef_food_items: {
+        Row: {
+          chef_id: string | null
+          created_at: string
+          food_item_id: string | null
+          id: string
+        }
+        Insert: {
+          chef_id?: string | null
+          created_at?: string
+          food_item_id?: string | null
+          id?: string
+        }
+        Update: {
+          chef_id?: string | null
+          created_at?: string
+          food_item_id?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chef_food_items_chef_id_fkey"
+            columns: ["chef_id"]
+            isOneToOne: false
+            referencedRelation: "chefs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chef_food_items_food_item_id_fkey"
+            columns: ["food_item_id"]
+            isOneToOne: false
+            referencedRelation: "food_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chef_menu_items: {
         Row: {
           chef_id: string
@@ -53,6 +121,51 @@ export type Database = {
             columns: ["food_item_id"]
             isOneToOne: false
             referencedRelation: "food_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chef_quotes: {
+        Row: {
+          chef_id: string | null
+          created_at: string
+          id: string
+          is_visible_to_customer: boolean | null
+          price: number
+          quote_id: string | null
+          quote_status: Database["public"]["Enums"]["quote_status"] | null
+        }
+        Insert: {
+          chef_id?: string | null
+          created_at?: string
+          id?: string
+          is_visible_to_customer?: boolean | null
+          price: number
+          quote_id?: string | null
+          quote_status?: Database["public"]["Enums"]["quote_status"] | null
+        }
+        Update: {
+          chef_id?: string | null
+          created_at?: string
+          id?: string
+          is_visible_to_customer?: boolean | null
+          price?: number
+          quote_id?: string | null
+          quote_status?: Database["public"]["Enums"]["quote_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chef_quotes_chef_id_fkey"
+            columns: ["chef_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chef_quotes_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
             referencedColumns: ["id"]
           },
         ]
@@ -144,6 +257,33 @@ export type Database = {
           id?: string
           name?: string
           phone?: string | null
+        }
+        Relationships: []
+      }
+      delivery_personnel: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          name: string
+          phone: string | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          phone?: string | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          phone?: string | null
+          status?: string | null
         }
         Relationships: []
       }

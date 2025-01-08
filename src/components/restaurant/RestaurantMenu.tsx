@@ -9,6 +9,9 @@ import { FooterSection } from "./sections/FooterSection";
 
 export const RestaurantMenu = () => {
   const { toast } = useToast();
+  const [isQuoteOpen, setIsQuoteOpen] = useState(false);
+  const [showQuoteForm, setShowQuoteForm] = useState(false);
+  const [quoteItems, setQuoteItems] = useState<Array<{ foodItem: any; quantity: number }>>([]);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [user, setUser] = useState(null);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -18,6 +21,7 @@ export const RestaurantMenu = () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         
+        // If there's a session, verify the profile exists
         if (session?.user) {
           const { data: profile } = await supabase
             .from('profiles')
@@ -26,13 +30,21 @@ export const RestaurantMenu = () => {
             .maybeSingle();
 
           if (!profile) {
+            console.log('Profile not found');
+            // Clear local state first
             setUser(null);
+            setQuoteItems([]);
+            setShowQuoteForm(false);
+            setIsQuoteOpen(false);
             
             try {
+              // Attempt to sign out, but don't wait for it
               supabase.auth.signOut({ scope: 'local' }).catch(() => {
+                // Ignore sign out errors since we've already cleared local state
                 console.log('Sign out failed, but local state is cleared');
               });
             } catch (error) {
+              // Ignore sign out errors
               console.log('Sign out error caught:', error);
             }
 
@@ -66,13 +78,21 @@ export const RestaurantMenu = () => {
                 description: "You have successfully signed in.",
               });
             } else {
+              console.log('No profile found for user:', session.user.id);
+              // Clear local state first
               setUser(null);
+              setQuoteItems([]);
+              setShowQuoteForm(false);
+              setIsQuoteOpen(false);
               
               try {
+                // Attempt to sign out, but don't wait for it
                 supabase.auth.signOut({ scope: 'local' }).catch(() => {
+                  // Ignore sign out errors since we've already cleared local state
                   console.log('Sign out failed, but local state is cleared');
                 });
               } catch (error) {
+                // Ignore sign out errors
                 console.log('Sign out error caught:', error);
               }
 
@@ -84,6 +104,9 @@ export const RestaurantMenu = () => {
             }
           } else if (event === 'SIGNED_OUT') {
             setUser(null);
+            setQuoteItems([]);
+            setShowQuoteForm(false);
+            setIsQuoteOpen(false);
           }
         });
 
@@ -92,13 +115,20 @@ export const RestaurantMenu = () => {
         };
       } catch (error: any) {
         console.error('Auth initialization error:', error);
+        // Clear local state first
         setUser(null);
+        setQuoteItems([]);
+        setShowQuoteForm(false);
+        setIsQuoteOpen(false);
         
         try {
+          // Attempt to sign out, but don't wait for it
           supabase.auth.signOut({ scope: 'local' }).catch(() => {
+            // Ignore sign out errors since we've already cleared local state
             console.log('Sign out failed, but local state is cleared');
           });
         } catch (error) {
+          // Ignore sign out errors
           console.log('Sign out error caught:', error);
         }
 
@@ -127,27 +157,74 @@ export const RestaurantMenu = () => {
     },
   });
 
+  const handleAddToQuote = (item: any) => {
+    if (!user) {
+      setShowAuthDialog(true);
+      toast({
+        title: "Please sign in",
+        description: "You need to sign in to create a quote",
+      });
+      return;
+    }
+
+    const existingItem = quoteItems.find(qi => qi.foodItem.id === item.id);
+    if (existingItem) {
+      setQuoteItems(quoteItems.map(qi => 
+        qi.foodItem.id === item.id 
+          ? { ...qi, quantity: qi.quantity + 1 }
+          : qi
+      ));
+    } else {
+      setQuoteItems([...quoteItems, { foodItem: item, quantity: 1 }]);
+    }
+    
+    toast({
+      title: "Added to quote",
+      description: `${item.name} has been added to your quote.`,
+    });
+  };
+
+  const handleQuoteSuccess = () => {
+    setShowQuoteForm(false);
+    setIsQuoteOpen(false);
+    setQuoteItems([]);
+    toast({
+      title: "Quote Submitted",
+      description: "Your quote has been submitted successfully.",
+    });
+  };
+
+  const handleAuthSuccess = () => {
+    setShowAuthDialog(false);
+    toast({
+      title: "Success",
+      description: "You have successfully signed in.",
+    });
+  };
+
   if (!isInitialized) return <div className="text-center p-8">Loading...</div>;
 
   return (
     <div className="min-h-screen bg-background">
       <RestaurantNav 
         user={user}
+        quoteItems={quoteItems}
+        isQuoteOpen={isQuoteOpen}
+        showQuoteForm={showQuoteForm}
         showAuthDialog={showAuthDialog}
+        setIsQuoteOpen={setIsQuoteOpen}
+        setShowQuoteForm={setShowQuoteForm}
         setShowAuthDialog={setShowAuthDialog}
-        handleAuthSuccess={() => {
-          setShowAuthDialog(false);
-          toast({
-            title: "Success",
-            description: "You have successfully signed in.",
-          });
-        }}
+        setQuoteItems={setQuoteItems}
+        handleQuoteSuccess={handleQuoteSuccess}
+        handleAuthSuccess={handleAuthSuccess}
       />
 
       <main>
         <HeroSection />
         <MenuSection 
           foodItems={foodItems}
+          onAddToQuote={handleAddToQuote}
           onDietaryFilterChange={(value) => console.log('Dietary:', value)}
           onCourseFilterChange={(value) => console.log('Course:', value)}
         />

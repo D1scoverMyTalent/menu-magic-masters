@@ -1,24 +1,40 @@
-import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Menu, UserCircle2 } from "lucide-react";
+import { Menu, ShoppingCart, UserCircle2 } from "lucide-react";
 import { SignInForm } from "../SignInForm";
 import { SignUpForm } from "../SignUpForm";
+import { QuoteList } from "../QuoteList";
+import { QuoteForm } from "../QuoteForm";
 import { supabase } from "@/integrations/supabase/client";
+import { useState, useEffect } from "react";
 
 interface RestaurantNavProps {
   user: any;
+  quoteItems: Array<{ foodItem: any; quantity: number }>;
+  isQuoteOpen: boolean;
+  showQuoteForm: boolean;
   showAuthDialog: boolean;
+  setIsQuoteOpen: (value: boolean) => void;
+  setShowQuoteForm: (value: boolean) => void;
   setShowAuthDialog: (value: boolean) => void;
+  setQuoteItems: (items: Array<{ foodItem: any; quantity: number }>) => void;
+  handleQuoteSuccess: () => void;
   handleAuthSuccess: () => void;
 }
 
 export const RestaurantNav = ({
   user,
+  quoteItems,
+  isQuoteOpen,
+  showQuoteForm,
   showAuthDialog,
+  setIsQuoteOpen,
+  setShowQuoteForm,
   setShowAuthDialog,
+  setQuoteItems,
+  handleQuoteSuccess,
   handleAuthSuccess
 }: RestaurantNavProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -45,6 +61,9 @@ export const RestaurantNav = ({
     try {
       await supabase.auth.signOut();
       setIsAuthenticated(false);
+      setQuoteItems([]);
+      setShowQuoteForm(false);
+      setIsQuoteOpen(false);
     } catch (error) {
       console.error('Sign out error:', error);
     }
@@ -65,6 +84,18 @@ export const RestaurantNav = ({
             </SheetTrigger>
             <SheetContent side="right" className="w-[300px]">
               <div className="flex flex-col gap-4 pt-4">
+                <Button 
+                  variant="ghost" 
+                  className="text-primary w-full justify-start gap-2"
+                  onClick={() => {
+                    setIsQuoteOpen(true);
+                    setIsMobileMenuOpen(false);
+                  }}
+                >
+                  <ShoppingCart className="h-5 w-5" />
+                  <span>Quote ({quoteItems.reduce((acc, item) => acc + item.quantity, 0)})</span>
+                </Button>
+                
                 {!isAuthenticated ? (
                   <Button 
                     variant="ghost" 
@@ -93,6 +124,35 @@ export const RestaurantNav = ({
 
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center gap-4">
+          <Sheet open={isQuoteOpen} onOpenChange={setIsQuoteOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" className="text-secondary gap-2">
+                <ShoppingCart className="h-5 w-5" />
+                <span>Quote ({quoteItems.reduce((acc, item) => acc + item.quantity, 0)})</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>Your Quote</SheetTitle>
+              </SheetHeader>
+              {showQuoteForm ? (
+                <QuoteForm items={quoteItems} onSuccess={handleQuoteSuccess} />
+              ) : (
+                <div className="space-y-4">
+                  <QuoteList items={quoteItems} setItems={setQuoteItems} />
+                  {quoteItems.length > 0 && (
+                    <Button 
+                      className="w-full" 
+                      onClick={() => setShowQuoteForm(true)}
+                    >
+                      Proceed to Quote Details
+                    </Button>
+                  )}
+                </div>
+              )}
+            </SheetContent>
+          </Sheet>
+
           {!isAuthenticated ? (
             <Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
               <DialogTrigger asChild>
