@@ -214,6 +214,7 @@ export type Database = {
           id: string
           quantity: number | null
           quote_id: string | null
+          quote_status: string | null
         }
         Insert: {
           created_at?: string
@@ -221,6 +222,7 @@ export type Database = {
           id?: string
           quantity?: number | null
           quote_id?: string | null
+          quote_status?: string | null
         }
         Update: {
           created_at?: string
@@ -228,6 +230,7 @@ export type Database = {
           id?: string
           quantity?: number | null
           quote_id?: string | null
+          quote_status?: string | null
         }
         Relationships: [
           {

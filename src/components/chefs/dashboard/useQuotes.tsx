@@ -10,6 +10,22 @@ export const useQuotes = (session: any) => {
     queryKey: ['chef-quotes', session?.user?.id],
     enabled: !!session?.user?.id,
     queryFn: async () => {
+      // First, get the chef's menu items
+      const { data: chefMenuItems, error: menuError } = await supabase
+        .from('chef_menu_items')
+        .select('food_item_id')
+        .eq('chef_id', session.user.id)
+        .eq('is_active', true);
+
+      if (menuError) {
+        console.error('Error fetching chef menu items:', menuError);
+        throw menuError;
+      }
+
+      // Create a Set of the chef's food item IDs for efficient lookup
+      const chefFoodItemIds = new Set(chefMenuItems?.map(item => item.food_item_id));
+
+      // Fetch all quotes with their items and related data
       const { data: quotes, error } = await supabase
         .from('quotes')
         .select(`
@@ -23,6 +39,7 @@ export const useQuotes = (session: any) => {
           quote_items (
             quantity,
             food_items (
+              id,
               name,
               dietary_preference,
               course_type
@@ -45,17 +62,19 @@ export const useQuotes = (session: any) => {
         throw error;
       }
 
-      // Filter quotes to show:
-      // 1. All pending quotes that don't have a chef assigned
-      // 2. Quotes where this chef has submitted a quote
+      // Filter quotes to only include those that have items in the chef's menu
       return quotes?.filter(quote => {
-        // Show all pending quotes that don't have a chef assigned
-        if (!quote.is_confirmed) return true;
-        
-        // Show quotes where this chef has already submitted a quote
-        if (quote.chef_quotes?.some(q => q.chef_id === session.user.id)) return true;
-        
-        return false;
+        // Check if any of the quote items are in the chef's menu
+        const hasMatchingItems = quote.quote_items?.some(item => 
+          chefFoodItemIds.has(item.food_items?.id)
+        );
+
+        return (
+          // Show quotes that have items from chef's menu
+          (hasMatchingItems && !quote.is_confirmed) ||
+          // Or show quotes where this chef has already submitted a quote
+          quote.chef_quotes?.some(q => q.chef_id === session.user.id)
+        );
       }).filter(quote => 
         // Ensure we only show quotes from customers
         quote.profiles?.role === 'customer'
