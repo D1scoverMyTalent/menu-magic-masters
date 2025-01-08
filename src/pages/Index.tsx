@@ -1,59 +1,49 @@
+import { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { FoodList } from '@/components/FoodList';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from "@/components/ui/use-toast";
 
 const Index = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-      <div className="text-center space-y-6 max-w-2xl mx-auto">
-        <h1 className="text-4xl font-bold text-primary">Welcome to Menu Magic Masters</h1>
-        <p className="text-lg text-muted-foreground">
-          Choose your role to get started
-        </p>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Button 
-            variant="default" 
-            className="w-full p-6"
-            onClick={() => navigate("/admin")}
+    <div className="min-h-screen bg-background">
+      <nav className="bg-primary p-4">
+        <div className="container mx-auto flex justify-between items-center">
+          <h1 
+            className="text-2xl font-bold text-white cursor-pointer"
+            onClick={() => navigate('/')}
           >
-            Admin Dashboard
-          </Button>
-          
-          <Button 
-            variant="default" 
-            className="w-full p-6"
-            onClick={() => navigate("/chef/login")}
-          >
-            Chef Portal
-          </Button>
-          
-          <Button 
-            variant="default" 
-            className="w-full p-6"
-            onClick={() => navigate("/restaurant")}
-          >
-            Restaurant Menu
-          </Button>
-          
-          <Button 
-            variant="default" 
-            className="w-full p-6"
-            onClick={() => navigate("/customer")}
-          >
-            Customer Dashboard
-          </Button>
-          
-          <Button 
-            variant="default" 
-            className="w-full p-6"
-            onClick={() => navigate("/delivery")}
-          >
-            Delivery Dashboard
-          </Button>
+            Restaurant Manager
+          </h1>
+          <div className="space-x-4">
+            <Button 
+              variant="secondary"
+              onClick={() => navigate('/admin')}
+            >
+              Admin Dashboard
+            </Button>
+            <Button 
+              variant="secondary"
+              onClick={() => navigate('/restaurant')}
+            >
+              Restaurant Menu
+            </Button>
+            <Button 
+              variant="secondary"
+              onClick={() => navigate('/chef')}
+            >
+              Chef Dashboard
+            </Button>
+          </div>
         </div>
-      </div>
+      </nav>
+
+      <main className="container mx-auto py-8">
+        <FoodList />
+      </main>
     </div>
   );
 };

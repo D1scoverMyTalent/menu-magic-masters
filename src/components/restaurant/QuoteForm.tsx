@@ -55,10 +55,10 @@ export const QuoteForm = ({ items, onSuccess }: QuoteFormProps) => {
 
       if (quoteError) throw quoteError;
 
-      // Create quote items with proper UUID handling
+      // Create quote items
       const quoteItems = items.map(item => ({
-        quote_id: quote.id, // This will be a proper UUID from the quotes table
-        food_item_id: item.foodItem.id, // Ensure this is a proper UUID
+        quote_id: quote.id,
+        food_item_id: item.foodItem.id,
         quantity: item.quantity,
       }));
 
@@ -75,11 +75,10 @@ export const QuoteForm = ({ items, onSuccess }: QuoteFormProps) => {
 
       onSuccess();
     } catch (error: any) {
-      console.error('Error submitting quote:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message || "Failed to submit quote. Please try again.",
+        description: error.message,
       });
     }
   };

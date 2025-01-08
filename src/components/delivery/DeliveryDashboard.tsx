@@ -14,10 +14,7 @@ export const DeliveryDashboard = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate('/');
-        return;
-      }
+      if (!session) return;
 
       const { data: profile } = await supabase
         .from('profiles')
@@ -30,7 +27,7 @@ export const DeliveryDashboard = () => {
       }
     };
     fetchProfile();
-  }, [navigate]);
+  }, []);
 
   const { data: orders, isLoading, refetch } = useQuery({
     queryKey: ['delivery-orders'],
@@ -61,21 +58,8 @@ export const DeliveryDashboard = () => {
   });
 
   const handleSignOut = async () => {
-    try {
-      await supabase.auth.signOut();
-      toast({
-        title: "Success",
-        description: "Signed out successfully",
-      });
-      navigate('/');
-    } catch (error: any) {
-      console.error('Sign out error:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to sign out",
-      });
-    }
+    await supabase.auth.signOut();
+    navigate('/');
   };
 
   const handleStatusUpdate = async (id: string, type: 'quote', newStatus: 'on_the_way' | 'delivered'): Promise<void> => {

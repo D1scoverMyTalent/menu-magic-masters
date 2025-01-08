@@ -45,37 +45,14 @@ export const CustomerForm = ({ initialData, onSuccess, onCancel }: CustomerFormP
           description: "Customer updated successfully",
         });
       } else {
-        // Check if customer with email already exists
-        const { data: existingCustomer, error: checkError } = await supabase
-          .from('customers')
-          .select('id')
-          .eq('email', formData.email.trim().toLowerCase())
-          .maybeSingle();
-
-        if (checkError) throw checkError;
-        if (existingCustomer) {
-          throw new Error("A customer with this email already exists");
-        }
-
-        // Check if auth user exists
-        const { data: existingAuth, error: authCheckError } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('email', formData.email.trim().toLowerCase())
-          .maybeSingle();
-
-        if (authCheckError) throw authCheckError;
-        if (existingAuth) {
-          throw new Error("An account with this email already exists");
-        }
-
+        // Create new customer with auth account
         if (!formData.password || formData.password.length < 6) {
           throw new Error("Password must be at least 6 characters long");
         }
 
-        // Create auth user with customer role
+        // First create auth user
         const { data: authData, error: authError } = await supabase.auth.signUp({
-          email: formData.email.trim().toLowerCase(),
+          email: formData.email,
           password: formData.password,
           options: {
             data: {
@@ -86,20 +63,31 @@ export const CustomerForm = ({ initialData, onSuccess, onCancel }: CustomerFormP
         });
 
         if (authError) throw authError;
-        if (!authData.user) throw new Error("Failed to create customer account");
 
-        // Create customer record
+        // Then create customer record
         const { error: customerError } = await supabase
           .from('customers')
           .insert([{
-            id: authData.user.id,
             name: formData.name,
-            email: formData.email.trim().toLowerCase(),
+            email: formData.email,
             phone: formData.phone,
             address: formData.address
           }]);
 
         if (customerError) throw customerError;
+
+        // Create profile record
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([{
+            id: authData?.user?.id,
+            email: formData.email,
+            full_name: formData.name,
+            phone: formData.phone,
+            role: 'customer'
+          }]);
+
+        if (profileError) throw profileError;
 
         toast({
           title: "Success",
@@ -108,11 +96,10 @@ export const CustomerForm = ({ initialData, onSuccess, onCancel }: CustomerFormP
       }
       onSuccess();
     } catch (error: any) {
-      console.error('Customer form error:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message || "Failed to save customer",
+        description: error.message,
       });
     } finally {
       setLoading(false);
