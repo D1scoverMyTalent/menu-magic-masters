@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -6,7 +7,6 @@ import { Menu, UserCircle2 } from "lucide-react";
 import { SignInForm } from "../SignInForm";
 import { SignUpForm } from "../SignUpForm";
 import { supabase } from "@/integrations/supabase/client";
-import { useState } from "react";
 
 interface RestaurantNavProps {
   user: any;

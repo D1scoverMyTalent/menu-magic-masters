@@ -7,7 +7,7 @@ import { AspectRatio } from '@/components/ui/aspect-ratio';
 
 interface MenuSectionProps {
   foodItems: any[];
-  onAddToQuote: (item: any) => void;
+  onAddToQuote?: (item: any) => void;  // Made optional
   onDietaryFilterChange: (value: string) => void;
   onCourseFilterChange: (value: string) => void;
 }
@@ -74,16 +74,18 @@ export const MenuSection = ({
                   <span className="capitalize">{item.dietary_preference}</span>
                   <span className="capitalize">{item.course_type}</span>
                 </div>
-                <div className="flex justify-end">
-                  <Button 
-                    onClick={() => onAddToQuote(item)}
-                    variant="secondary"
-                    className="w-full sm:w-auto gap-2 bg-secondary text-primary hover:bg-secondary/90"
-                  >
-                    <PlusCircle className="h-4 w-4" />
-                    Add to Quote
-                  </Button>
-                </div>
+                {onAddToQuote && (
+                  <div className="flex justify-end">
+                    <Button 
+                      onClick={() => onAddToQuote(item)}
+                      variant="secondary"
+                      className="w-full sm:w-auto gap-2 bg-secondary text-primary hover:bg-secondary/90"
+                    >
+                      <PlusCircle className="h-4 w-4" />
+                      Add to Quote
+                    </Button>
+                  </div>
+                )}
               </div>
             </Card>
           ))}
