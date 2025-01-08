@@ -9,6 +9,74 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      chef_documents: {
+        Row: {
+          chef_id: string | null
+          document_type: string
+          document_url: string
+          id: string
+          uploaded_at: string
+        }
+        Insert: {
+          chef_id?: string | null
+          document_type: string
+          document_url: string
+          id?: string
+          uploaded_at?: string
+        }
+        Update: {
+          chef_id?: string | null
+          document_type?: string
+          document_url?: string
+          id?: string
+          uploaded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chef_documents_chef_id_fkey"
+            columns: ["chef_id"]
+            isOneToOne: false
+            referencedRelation: "chefs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chef_food_items: {
+        Row: {
+          chef_id: string | null
+          created_at: string
+          food_item_id: string | null
+          id: string
+        }
+        Insert: {
+          chef_id?: string | null
+          created_at?: string
+          food_item_id?: string | null
+          id?: string
+        }
+        Update: {
+          chef_id?: string | null
+          created_at?: string
+          food_item_id?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chef_food_items_chef_id_fkey"
+            columns: ["chef_id"]
+            isOneToOne: false
+            referencedRelation: "chefs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chef_food_items_food_item_id_fkey"
+            columns: ["food_item_id"]
+            isOneToOne: false
+            referencedRelation: "food_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chef_menu_items: {
         Row: {
           chef_id: string
@@ -104,29 +172,62 @@ export type Database = {
       }
       chefs: {
         Row: {
+          alias_name: string | null
+          business_address: string | null
+          business_name: string
           created_at: string
           email: string
           experience_years: number | null
+          first_name: string
+          food_ratings: number | null
+          hygiene_certificate_url: string | null
           id: string
+          is_active: boolean | null
+          last_name: string
+          max_people_served: number | null
+          min_people_served: number | null
           name: string
+          operating_days: string[] | null
           phone: string | null
           speciality: string | null
         }
         Insert: {
+          alias_name?: string | null
+          business_address?: string | null
+          business_name: string
           created_at?: string
           email: string
           experience_years?: number | null
+          first_name: string
+          food_ratings?: number | null
+          hygiene_certificate_url?: string | null
           id?: string
+          is_active?: boolean | null
+          last_name: string
+          max_people_served?: number | null
+          min_people_served?: number | null
           name: string
+          operating_days?: string[] | null
           phone?: string | null
           speciality?: string | null
         }
         Update: {
+          alias_name?: string | null
+          business_address?: string | null
+          business_name?: string
           created_at?: string
           email?: string
           experience_years?: number | null
+          first_name?: string
+          food_ratings?: number | null
+          hygiene_certificate_url?: string | null
           id?: string
+          is_active?: boolean | null
+          last_name?: string
+          max_people_served?: number | null
+          min_people_served?: number | null
           name?: string
+          operating_days?: string[] | null
           phone?: string | null
           speciality?: string | null
         }
