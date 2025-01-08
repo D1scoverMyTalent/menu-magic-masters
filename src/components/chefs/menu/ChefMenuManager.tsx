@@ -13,9 +13,14 @@ export const ChefMenuManager = ({ chefId }: { chefId: string }) => {
   const [isAddMenuItemOpen, setIsAddMenuItemOpen] = useState(false);
   const [selectedFoodItem, setSelectedFoodItem] = useState<any>(null);
 
+  // Don't fetch if we don't have a valid chefId
   const { data: menuItems, refetch: refetchMenuItems } = useQuery({
     queryKey: ["chef-menu-items", chefId],
     queryFn: async () => {
+      if (!chefId) {
+        throw new Error("No chef ID provided");
+      }
+
       const { data, error } = await supabase
         .from("chef_menu_items")
         .select(`
@@ -27,7 +32,17 @@ export const ChefMenuManager = ({ chefId }: { chefId: string }) => {
       if (error) throw error;
       return data;
     },
+    enabled: Boolean(chefId), // Only run query if chefId exists
   });
+
+  // If no chef ID is provided, show an error message
+  if (!chefId) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-[#600000]">Unable to load menu items. Please try logging in again.</p>
+      </div>
+    );
+  }
 
   const handleFoodItemSelect = (item: any) => {
     setSelectedFoodItem(item);
